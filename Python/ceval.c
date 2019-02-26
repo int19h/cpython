@@ -739,6 +739,9 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
         _Py_CODEUNIT word = *next_instr; \
         opcode = _Py_OPCODE(word); \
         if (opcode == op){ \
+			/* Record code coverage */ \
+			co->co_codecov[INSTR_OFFSET()] = 1; \
+			co->co_codecov[INSTR_OFFSET() + 1] = 1; \
             oparg = _Py_OPARG(word); \
             next_instr++; \
             goto PRED_##op; \
@@ -1027,6 +1030,10 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
                 goto error;
         }
 
+		/* Record code coverage */
+		co->co_codecov[INSTR_OFFSET()] = 1;
+		co->co_codecov[INSTR_OFFSET() + 1] = 1;
+
         /* Extract opcode and argument */
 
         NEXTOPARG();
@@ -1038,7 +1045,7 @@ _PyEval_EvalFrameDefault(PyFrameObject *f, int throwflag)
 #endif
         dxp[opcode]++;
 #endif
-
+	
 #ifdef LLTRACE
         /* Instruction tracing */
 

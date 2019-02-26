@@ -206,6 +206,7 @@ PyCode_New(int argcount, int kwonlyargcount,
     co->co_zombieframe = NULL;
     co->co_weakreflist = NULL;
     co->co_extra = NULL;
+	co->co_codecov = PyMem_Calloc(PyObject_Length(co->co_code), 1);
     return co;
 }
 
@@ -429,6 +430,30 @@ code_dealloc(PyCodeObject *co)
 
         PyMem_Free(co_extra);
     }
+
+	{
+		PyObject* co_codecov = PyBytes_FromStringAndSize(co->co_codecov, PyObject_Length(co->co_code));
+		PyObject* co_firstlineno = PyLong_FromLong(co->co_firstlineno);
+		PyObject* record = PyTuple_Pack(5, co->co_filename, co_firstlineno, co->co_code, co->co_lnotab, co_codecov);
+		PyObject* repr = PyObject_Repr(record);
+
+		PyObject* filename = PyUnicode_Concat(co->co_filename, PyUnicode_FromString(".codecov"));
+		const char* filename_s = PyUnicode_AsUTF8(filename);
+		FILE* file = fopen(filename_s, "a");
+		if (file) {
+			const char* repr_s = PyUnicode_AsUTF8(repr);
+			fputs(repr_s, file);
+			fputs(",\n", file);
+			fclose(file);
+		}
+
+		Py_XDECREF(filename);
+		Py_XDECREF(repr);
+		Py_XDECREF(record);
+		Py_XDECREF(co_codecov);
+		Py_XDECREF(co_firstlineno);
+		PyMem_FREE(co->co_codecov);
+	}
 
     Py_XDECREF(co->co_code);
     Py_XDECREF(co->co_consts);
