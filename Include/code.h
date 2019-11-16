@@ -20,7 +20,7 @@ typedef uint16_t _Py_CODEUNIT;
 typedef struct _PyOpcache _PyOpcache;
 
 /* Bytecode object */
-typedef struct {
+typedef struct _codeobject {
     PyObject_HEAD
     int co_argcount;            /* #arguments, except *args */
     int co_posonlyargcount;     /* #positional only arguments */
@@ -66,6 +66,8 @@ typedef struct {
     _PyOpcache *co_opcache;
     int co_opcache_flag;  // used to determine when create a cache.
     unsigned char co_opcache_size;  // length of co_opcache.
+
+	struct _codeobject *co_prev, *co_next;
 } PyCodeObject;
 
 /* Masks for co_flags above */

@@ -15,6 +15,8 @@ typedef struct {
     void *ce_extras[1];
 } _PyCodeObjectExtra;
 
+PyCodeObject *PyCode_First;
+
 /*[clinic input]
 class code "PyCodeObject *" "&PyCode_Type"
 [clinic start generated code]*/
@@ -239,6 +241,14 @@ PyCode_NewWithPosOnlyArgs(int argcount, int posonlyargcount, int kwonlyargcount,
     co->co_opcache = NULL;
     co->co_opcache_flag = 0;
     co->co_opcache_size = 0;
+
+	co->co_prev = NULL;
+	co->co_next = PyCode_First;
+	if (co->co_next) {
+		co->co_next->co_prev = co;
+	}
+	PyCode_First = co;
+
     return co;
 }
 
@@ -524,6 +534,15 @@ code_new(PyTypeObject *type, PyObject *args, PyObject *kw)
 static void
 code_dealloc(PyCodeObject *co)
 {
+	if (co->co_next) {
+		co->co_next->co_prev = co->co_prev;
+	}
+	if (co->co_prev) {
+		co->co_prev->co_next = co->co_next;
+	} else {
+		PyCode_First = NULL;
+	}
+
     if (co->co_opcache != NULL) {
         PyMem_FREE(co->co_opcache);
     }
